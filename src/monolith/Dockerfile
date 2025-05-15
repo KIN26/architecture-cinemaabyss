@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS builder
+FROM --platform=linux/amd64 golang:1.23-alpine AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o monolith .
 
 # Use a smaller image for the final application
-FROM alpine:latest  
+FROM --platform=linux/amd64 alpine:latest
 
 RUN apk --no-cache add ca-certificates
 
