@@ -1,0 +1,99 @@
+@startuml
+!include https://raw.githubusercontent.com/bschwarz/puml-themes/master/themes/cerulean/puml-theme-cerulean.puml
+skinparam backgroundColor white
+
+autonumber
+
+==Установка рейтинга\nфильму пользователем==
+
+actor User as user
+
+box "КиноБездна"
+participant web as web
+participant bff as bff
+participant RatingService as r
+database RatingDB as r_db
+queue Kafka as kafka
+participant RatingAdapter as ra
+database RatingAdapterDB as ra_db
+end box
+
+box "Внешний сервис по\nаггрегации рейтинга"
+queue RabbitMQ as rmq
+end box
+
+user -> web: Ставит\nрейтинг\nфильму
+activate web
+web -> bff: Отправка\nзапроса
+bff -> r: Получение\nзапроса с\nрейтингом
+r -> r_db: Сохранить\nрейтинг
+r -> r_db: Сохранить\nсобытие в\nOutBox
+r -> bff: Отправка\nответа
+bff -> web: Отправка\nответа
+web --> user: Видет ответ\nот сервиса
+deactivate web
+
+==Асинхронный процесс\nработы outbox worker-а\nпо отправки событий в\nаггрегатор==
+
+autonumber 1
+
+r -> r_db: Получить новые\nсобытия на отправку\n и заблокировать их
+activate r
+loop каждое полученное\nсобытие из бд
+	r -> r_db: Сменить статус\nсобытия на\nSENDING
+end
+loop каждое полученное\nсобытие из бд
+	r -> kafka: Публикация события
+end
+loop каждое полученное\nсобытие из бд
+	r -> r_db: Сменить статус\nсобытия на\nSENT
+end
+deactivate r
+
+
+
+==Асинхронный процесс\nполучения событий от\nаггрегатора==
+
+autonumber 1
+
+r -> kafka: Получить события\nот аггрегатора
+activate r
+r -> r_db: Обновить\nрейтинг\nфильму
+deactivate r
+
+==Асинхронный процесс\nотправка событий в\nочередь аггрегатора==
+
+autonumber 1
+
+ra -> kafka: Получить событие с\nновым рейтингом
+activate ra
+ra -> rmq: Публикация\nсобытия в\nочередь\nаггрегатора
+deactivate ra
+
+==Асинхронный процесс\nполучение событий от\nсервиса аггрегатора==
+
+autonumber 1
+
+ra -> rmq: Получение\nсобытия\nот аггрегатора
+activate ra
+ra -> ra_db: Сохранить\nсобытие в\noutbox
+deactivate ra
+
+==Асинхронный процесс\nработы outbox worker-а\nпо отправки событий из\nаггрегатора в RatingService==
+
+autonumber 1
+
+ra -> ra_db: Получить новые\nсобытия на отправку\n и заблокировать их
+activate ra
+loop каждое полученное\nсобытие из бд
+	ra -> ra_db: Сменить статус\nсобытия на\nSENDING
+end
+loop каждое полученное\nсобытие из бд
+	ra -> kafka: Публикация события
+end
+loop каждое полученное\nсобытие из бд
+	ra -> ra_db: Сменить статус\nсобытия на\nSENT
+end
+deactivate ra
+
+@enduml

@@ -1,0 +1,75 @@
+```plantuml
+@startuml
+!include https://raw.githubusercontent.com/bschwarz/puml-themes/master/themes/cerulean/puml-theme-cerulean.puml
+skinparam backgroundColor white
+
+
+
+actor Admin as adm
+
+box "КиноБездна"
+	participant AdminWeb as adm_web
+	participant bff as bff
+	participant MovieService as m_s
+	database MovieDB as m_db
+	database S3 as s3
+	queue Kafka as kafka
+	participant SerachService as s_s
+	database Elastic as el
+end box
+
+autonumber
+
+==Загрузка фильма\nадминистратором==
+adm -> adm_web: Отправка\nформы c\nданными о\nфильме
+activate adm_web
+adm_web -> bff: Отправка\nзапроса
+bff -> m_s: Отправка\nзапроса
+m_s -> m_db: Сохранить\nданные
+m_s -> bff: Отправить\nответ
+bff -> adm_web: Отправить\nответ
+adm_web --> adm: Вывести\nответ
+deactivate adm_web
+
+adm -> adm_web: Загрузка\nфайла
+activate adm_web
+adm_web -> bff: Передача\nфайла
+bff -> m_s: Передача\nфайла
+m_s -> s3: Загрузка\nфайла
+m_s -> m_db: Обновить\nстатус\nфильма
+m_s -> m_db: Сохранить\nсобытие в\noutbox
+m_s -> bff: Отправить\nответ
+bff -> adm_web: Отправить\nответ
+adm_web --> adm: Вывести\nответ
+deactivate adm_web
+
+==Асинхронный процесс\nработы outbox worker-а\nпо отправки событий о\nдобавлении нового\nфильма==
+
+autonumber 1
+
+m_s -> m_db: Получить новые\nсобытия на отправку\n и заблокировать их
+activate m_s
+loop каждое полученное\nсобытие из бд
+	m_s -> m_db: Сменить статус\nсобытия на\nSENDING
+end
+loop каждое полученное\nсобытие из бд
+	m_s -> kafka: Публикация события
+end
+loop каждое полученное\nсобытие из бд
+	m_s -> m_db: Сменить статус\nсобытия на\nSENT
+end
+deactivate m_s
+
+==Асинхронный процесс\nполучения событий о\nдобавлении нового\nфильма==
+
+autonumber 1
+
+s_s -> kafka: Получение события\nо новом фильме
+activate s_s
+s_s -> m_s: Получить данные\nо новом фильме\nHTTP
+s_s -> el: Сохранить\nданные
+deactivate s_s
+
+
+@enduml
+```

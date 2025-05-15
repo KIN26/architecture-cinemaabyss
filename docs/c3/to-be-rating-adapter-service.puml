@@ -1,0 +1,30 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(dev, "RatingAdapterService") {
+	Component(RabbitMQConsumer, "RabbitMQConsumer", "Принимает данные о аггрегированном рейтинге фильмов")
+	Component(KafkaConsumer, "KafkaConsumer", "Принимает новый рейтингах проставленных пользователями")
+
+	Component(ServiceLayer, "ServiceLayer", "Business logic")
+
+	Component(RepositoryLayer, "RepositoryLayer", "Чтение / запись данных")
+	Component(KafkaProducer, "KafkaProducer", "Отправка аггрегированных данных о рейтингах фильмов")
+	Component(RabbitMQProducer, "RabbitMQProducer", "Отправка рейтинга в сервис аггрегатор")
+
+	Rel(RabbitMQConsumer, ServiceLayer, "Вызывает бизнес логику")
+	Rel(KafkaConsumer, ServiceLayer, "Вызывает бизнес логику")
+
+	Rel(ServiceLayer, RepositoryLayer, "Чтение / запись данных")
+	Rel(ServiceLayer, KafkaProducer, "Отправка аггрегированного рейтинга")
+	Rel(ServiceLayer, RabbitMQProducer, "Отправка рейтинга пользователей")
+
+}
+
+ContainerDb(Db, "DB", "Elastic", "Хранит данные")
+ContainerQueue(EventBus, "EventBus", "Kafka", "Хранит cобытия")
+ContainerQueue(RabbitMQ, "RabbitMQ", "RabbitMQ", "Передает события в сервис аггрегатор")
+Rel(RepositoryLayer, Db, "Чтение / Запись данных", "SQL")
+Rel(KafkaProducer, EventBus, "Публикация событий")
+Rel(RabbitMQProducer, RabbitMQ, "Публикация событий")
+
+@enduml

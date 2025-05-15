@@ -1,0 +1,33 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(dev, "CinemaFacadeService") {
+	Component(Scheduler, "Scheduler", "CRON Планировщик")
+
+	Component(ServiceLayer, "ServiceLayer", "Business logic")
+
+	Component(RepositoryLayer, "RepositoryLayer", "Чтение / запись данных")
+	Component(KafkaProducer, "KafkaProducer", "Отправка событий о новом кинотеатре")
+	Component(HTTPClient, "HTTPClient", "HTTP клиент для взаимодествия с API других кинотеатров и получения списка кинотеатров от Cinemaservice")
+
+
+	Rel(Scheduler, Scheduler, "Раз в N минут")
+	Rel(Scheduler, ServiceLayer, "Вызывает бизнес логику")
+
+	Rel(ServiceLayer, HTTPClient, "Получить данные о: имеющихся кинотеатрах, списка фильмов из других кинотеатров")
+	Rel(ServiceLayer, RepositoryLayer, "Чтение / запись данных")
+	Rel(ServiceLayer, KafkaProducer, "Отправка данных о фильмах")
+
+}
+Container(CinemaService, "CinemaService", "Хранит данные о кинотеатрах")
+ContainerDb(Db, "DB", "Postgres", "Хранит данные")
+ContainerQueue(EventBus, "EventBus", "Kafka", "Хранит cобытия")
+System_Ext(ThirdPartyCinemas, "Сторонние онлайн кинотеатры")
+
+
+Rel(RepositoryLayer, Db, "Чтение / Запись данных", "SQL")
+Rel(KafkaProducer, EventBus, "Публикация событий")
+Rel(HTTPClient, CinemaService, "Получить список кинотеатров", "HTTP")
+Rel(HTTPClient, ThirdPartyCinemas, "Получить список фильмов", "HTTP")
+
+@enduml

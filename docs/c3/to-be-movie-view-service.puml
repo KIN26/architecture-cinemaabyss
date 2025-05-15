@@ -1,0 +1,18 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(dev, "MovieViewService") {
+	Component(AuthController, "MovieViewController", "Принимает запросы по протоколу HLS/DASH")
+
+	Component(ServiceLayer, "ServiceLayer", "Business logic")
+
+	Component(S3Client, "S3Client", "Клиент для взаимодествия с S3")
+
+	Rel(AuthController, ServiceLayer, "Вызывает бизнес логику")
+
+	Rel(ServiceLayer, S3Client, "Отправка запросов")
+}
+
+ContainerDb(S3, "S3", "Minio", "Хранит видео файлы")
+Rel(S3Client, S3, "Чтение видео\nфайла чанками", "HTTP")
+@enduml

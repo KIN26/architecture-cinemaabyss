@@ -1,0 +1,64 @@
+@startuml
+!include https://raw.githubusercontent.com/bschwarz/puml-themes/master/themes/cerulean/puml-theme-cerulean.puml
+skinparam backgroundColor white
+
+actor Admin as adm
+
+box "КиноБездна"
+participant AdminWeb as adm_web
+participant bff as bff
+participant CinemaService as cs
+participant CinemaDB as c_db
+queue Kafka as kafka
+participant CinemaFacade as cf
+end box
+
+participant ThirdPartyCinema as tpc
+
+==Добавление нового\nонлайн-кинотеатра==
+
+autonumber 1
+
+adm -> adm_web: Заполняет и\nотправляет\nформу
+activate adm_web
+adm_web -> bff: Передача\nзапроса
+bff -> cs: Передача\nзапроса
+cs -> c_db: Сохранить\nданные
+cs -> c_db: Сохранить\nсобытие в\noutbox
+cs -> bff: Отправить\nответ
+bff -> adm_web: Отправить\nответ
+adm_web --> adm: Получить\nответ от\nсервиса
+deactivate adm_web
+
+
+==Асинхронный процесс\nработы outbox worker-а\nпо отправки событий о\nдобавлении нового\nкинотеатра==
+
+autonumber 1
+
+
+cs -> c_db: Получить новые\nсобытия на отправку\n и заблокировать их
+activate cs
+loop каждое полученное\nсобытие из бд
+	cs -> c_db: Сменить статус\nсобытия на\nSENDING
+end
+loop каждое полученное\nсобытие из бд
+	cs -> kafka: Публикация события
+end
+loop каждое полученное\nсобытие из бд
+	cs -> c_db: Сменить статус\nсобытия на\nSENT
+end
+deactivate cs
+
+==Асинхронный процесс\nдля синхронизации\nданных с онлайн\nкинотеатров==
+
+cf -> cf: Повторять каждые N минут
+activate cf
+cf -> cs: Получит списокё\nкинотеатров и\nнастройки их\nподлючения
+group каждый кинотеарт обрабатывается параллельно
+	cf -> tpc: Получить\nсписок\nфильмов
+	loop каждый полученный фильм
+		cf -> kafka: Отправить данные
+	end
+	deactivate cf
+end
+@enduml
