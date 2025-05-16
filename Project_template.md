@@ -6,8 +6,61 @@
 Результат представьте в виде контейнерной диаграммы в нотации С4.
 Добавьте ссылку на файл в этот шаблон
 
-C1
+### C1
 
+![c1.to-be.png](files/c1.to-be.png)
+
+### C2
+
+![c2.to-be.png](files/c2.to-be.png)
+
+### C3 Auth Service
+
+![c3.to-be-auth-service.png](files/c3.to-be-auth-service.png)
+
+### C3 Billing service
+
+![c3.to-be-billing-service.png](files/c3.to-be-billing-service.png)
+
+### C3 Cinema facade service 
+
+![c3.to-be-cinema-facade-service.png](files/c3.to-be-cinema-facade-service.png)
+
+### C3 Cinema Service
+
+![c3.to-be-cinema-service.png](files/c3.to-be-cinema-service.png)
+
+### C3 Movie Service
+
+![c3.to-be-movie-service.png](files/c3.to-be-movie-service.png)
+
+### C3 Rating adapter Service
+
+![c3.to-be-rating-adapter-service.png](files/c3.to-be-rating-adapter-service.png)
+
+### C3 Rating service
+
+![c3.to-be-rating-service.png](files/c3.to-be-rating-service.png)
+
+### C3 Search Service
+
+![c3.to-be-search-service.png](files/c3.to-be-search-service.png)
+
+### C4 Просмотр фильма
+
+![c4.to-be-run-watch-movie.png](files/c4.to-be-run-watch-movie.png)
+
+### C4 Синхронизация рейтингов
+
+![c4.to-be-sync-rating.png](files/c4.to-be-sync-rating.png)
+
+### C4 Сихронизация онлайн кинотеатров
+
+![c4.to-be-sync-third-party-cinemas-movies.png](files/c4.to-be-sync-third-party-cinemas-movies.png)
+
+### C4 Загрузка нового фильма
+
+![c4.to-be-upload-new-movie.png](files/c4.to-be-upload-new-movie.png)
 
 # Задание 2
 
@@ -60,6 +113,14 @@ C1
 
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka из UI http://localhost:8090 
+
+### Kafka-ui
+
+![kafka-ui.png](files/kafka-ui.png)
+
+### Docker compose tests
+
+![docker-compose-test-results.png](files/docker-compose-test-results.png)
 
 # Задание 3
 
@@ -277,6 +338,17 @@ cat .docker/config.json | base64
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
 
+### тесты minikube postman
+
+![minikube-postman-tests.png](files/minikube-postman-tests.png)
+
+### Movies API в Браузере
+
+![movies-api-browser.png](files/movies-api-browser.png)
+
+### Events service logs
+
+![events-service-kube-logs.png](files/events-service-kube-logs.png)
 
 # Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
@@ -351,6 +423,9 @@ minikube tunnel
 Потом вызовите 
 https://cinemaabyss.example.com/api/movies
 
+### Helm deploy
+
+![helm-deploy.png](files/helm-deploy.png)
 
 ## Удаляем все
 
