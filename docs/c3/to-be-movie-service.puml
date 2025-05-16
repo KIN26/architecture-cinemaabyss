@@ -1,0 +1,33 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(dev, "MovieService") {
+	Component(KafkaConsumer, "KafkaConsumer", "Принимает события: новые фильмы, новые кинотеатры")
+	Component(MovieController, "MovieController", "Принимает запросы по протоколу HTTP")
+
+	Component(ServiceLayer, "ServiceLayer", "Business logic")
+
+	Component(S3Client, "S3Client", "Клиент для взаимодествия с S3")
+	Component(RepositoryReadLayer, "RepositoryReadLayer", "Чтение / запись данных")
+	Component(RepositoryWriteLayer, "RepositoryWriteLayer", "Запись данных")
+	Component(KafkaProducer, "KafkaProducer", "Публикация событий")
+
+	Rel(MovieController, ServiceLayer, "Вызывает бизнес логику")
+	Rel(KafkaConsumer, ServiceLayer, "Вызывает бизнес логику")
+
+	Rel(ServiceLayer, RepositoryReadLayer, "Чтение / запись данных")
+	Rel(ServiceLayer, RepositoryWriteLayer, "Запись данных")
+	Rel(ServiceLayer, S3Client, "Отправка запросов")
+	Rel(ServiceLayer, KafkaProducer, "Публикация событий")
+}
+
+ContainerDb(ReadDb, "Read DB", "PostgreSQL", "Хранит данные")
+ContainerDb(WriteDb, "Write DB", "PostgreSQL", "Хранит данные")
+ContainerQueue(EventBus, "EventBus", "Kafka", "Хранит события")
+ContainerDb(S3, "S3", "Minio", "Хранит видео файлы")
+Rel(S3Client, S3, "Загрузка видео\nфайлов", "HTTP")
+Rel(RepositoryReadLayer, ReadDb, "Чтение / Запись данных о фильмах", "SQL")
+Rel(RepositoryWriteLayer, WriteDb, "Запись данных о фильмах", "SQL")
+Rel(KafkaProducer, EventBus, "Публикация событий о сохраненных видео файлах и фильмах а так же rollback событий когда не удалось обработать новый онлайн кинотеатр")
+
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(dev, "CinemaService") {
+	Component(KafkaConsumer, "KafkaConsumer", "Принимает события о rollback-ах от MovieService")
+	Component(CinemaController, "CinemaController", "Принимает запросы по протоколу HTTP")
+
+	Component(ServiceLayer, "ServiceLayer", "Business logic")
+
+	Component(RepositoryLayer, "RepositoryLayer", "Чтение / запись данных")
+	Component(KafkaProducer, "KafkaProducer", "Отправка событий о новом кинотеатре")
+
+	Rel(CinemaController, ServiceLayer, "Вызывает бизнес логику")
+	Rel(KafkaConsumer, ServiceLayer, "Вызывает бизнес логику")
+
+	Rel(ServiceLayer, RepositoryLayer, "Чтение / запись данных")
+	Rel(ServiceLayer, KafkaProducer, "Отправка рейтинга")
+
+}
+
+ContainerDb(Db, "DB", "Postgres", "Хранит данные")
+ContainerQueue(EventBus, "EventBus", "Kafka", "Хранит cобытия")
+Rel(RepositoryLayer, Db, "Чтение / Запись данных", "SQL")
+Rel(KafkaProducer, EventBus, "Публикация событий")
+
+@enduml

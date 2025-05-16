@@ -1,0 +1,27 @@
+```plantuml
+@startuml
+!include https://raw.githubusercontent.com/bschwarz/puml-themes/master/themes/cerulean/puml-theme-cerulean.puml
+skinparam backgroundColor white
+
+autonumber
+
+==Просмотр видео контента==
+
+actor User as user
+
+box "КиноБездна"
+participant webui as web
+participant WebBFF as bff
+participant MovieViewService as mvs
+database S3 as s3
+end box
+
+user -> web: Запускает\nпросмотр фильма
+web -> bff: Отправка\nзапроса\n/watch/movie/{id}
+bff -> mvs: Переадресация\nзапроса сервесу
+mvs -> s3: Скачивание файла\nс s3 чанками. Файл\nнаходим по id который\nпередали в url
+mvs -> bff: Передача\nSteamResponse
+bff --> web
+web --> user: Воспроизвидение\nфильма
+@enduml
+```

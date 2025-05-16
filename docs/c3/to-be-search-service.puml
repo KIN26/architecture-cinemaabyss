@@ -1,0 +1,21 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(dev, "SearchService") {
+	Component(KafkaConsumer, "KafkaConsumer", "Принимает события, новые фильмы, обновление данных о фильме")
+	Component(SearchController, "SearchController", "Принимает запросы по протоколу HTTP")
+
+	Component(ServiceLayer, "ServiceLayer", "Business logic")
+
+	Component(RepositoryLayer, "RepositoryLayer", "Чтение / запись данных")
+
+	Rel(SearchController, ServiceLayer, "Вызывает бизнес логику")
+	Rel(KafkaConsumer, ServiceLayer, "Вызывает бизнес логику")
+
+	Rel(ServiceLayer, RepositoryLayer, "Чтение / запись данных")
+}
+
+ContainerDb(Db, "DB", "Elastic", "Хранит данные")
+Rel(RepositoryLayer, Db, "Чтение / Запись данных", "JSON")
+
+@enduml

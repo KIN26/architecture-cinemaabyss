@@ -1,0 +1,156 @@
+@startuml
+top to bottom direction
+
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+Person(Admin, "Администратор", "Администратор сервиса КиноБездны")
+Person(User, "Пользователь", "Подписчик КиноБездны")
+
+System(WarmHouseSystem, "Сервис КиноБездна")
+
+Container_Boundary(WarmHouseSystem, "Система теплый дом") {
+	Container(AdminWebUI, "Админ панель", "Angular")
+	Container(WebUI, "Веб приложение", "React")
+	Container(MobileApp, "Мобильное Приложение", "Swift / Java")
+	Container(SmartTVApp, "Приложение для смарт-тв", "JS")
+
+	Container(WebBFF, "BFF для веб приложения", "GO")
+	Container(AdminBFF, "BFF для\nАдмин панели", "GO")
+	Container(MobileAppBFF, "BFF для мобильного приложения", "GO")
+	Container(SmartTVBFF, "BFF для смарт-тв приложения", "GO")
+
+	Container(MovieViewService, "Сервис для\nпросмотра видео контента", "GO")
+	Container(MovieService, "Сервис для\nуправления\nданными о фильмах", "GO")
+	Container(UserService, "Сервис для\nуправления\nпользователями", "GO")
+	Container(AuthService, "Сервис\nавторизации", "GO, OAUTH 2.0")
+	Container(BillingService, "Сервис для\nоплаты подписок", "GO")
+	Container(RatingService, "Сервис для\nработы с рейтигом", "GO")
+	Container(CinemaService, "Сервис для\nработы с другими онлайн кинотеатрами", "GO")
+	Container(SearchService, "Поисковой\nсервис", "GO")
+
+	ContainerDb(MovieServiceDBRead, "Данные о\nимеюшихся\nфильмах", "Postgres, READ")
+	ContainerDb(MovieServiceDBWrite, "Данные о\nимеюшихся\nфильмах", "Postgres, WRITE")
+	ContainerDb(UserServiceDB, "Данные о пользователях", "Postgres")
+	ContainerDb(AuthServiceDB, "Данные о\nавторизации", "Postgres")
+	ContainerDb(BillingServiceDB, "Данные о\nплатежах\nи подписках", "Postgres")
+	ContainerDb(RatingServiceDB, "Данные о\nрейтингах", "Postgres")
+	ContainerDb(CinemaServiceDB, "Данные о других онлайн кинотеатрах, настройки подключения", "Postgres")
+	ContainerDb(SearchServiceDB, "Поисковая\nбаза", "Elastic")
+	ContainerDb(FileStorage, "Хранилище\nфайлов", "S3")
+
+	ContainerQueue(EventBus, "Очередь событий", "Kafka")
+
+	Container(ExternalRatingServiceAdapter, "Адаптер для работы с вшеним сервисом рейтингов", "GO")
+	Container(CinemaHandlerFacade, "Сервис-Фасад для по работе с разными кинотеатрами", "GO")
+	ContainerDb(ExternalRatingServiceMessageOutbox, "Message outbox DB", "Postgres")
+}
+
+System_Ext(ExternalRatingService, "Внешний рейтинговый сервис")
+Container_Boundary(ExternalRatingService, "Рейтинговый сервис") {
+	ContainerQueue(ExternalEventBus, "Очередь событий", "RabbitMQ")
+}
+
+System_Ext(OnlineCinemas, "Онлайн кинотеатры")
+System_Ext(PaymentSystem, "Платежная система")
+
+Lay_D(MovieServiceDBRead, EventBus)
+Lay_D(MovieServiceDBWrite, EventBus)
+Lay_D(CinemaServiceDB, EventBus)
+Lay_D(RatingServiceDB, EventBus)
+Lay_D(FileStorage, EventBus)
+Lay_D(BillingServiceDB, EventBus)
+Lay_D(UserServiceDB, EventBus)
+Lay_D(AuthServiceDB, EventBus)
+Lay_D(SearchServiceDB, EventBus)
+Lay_D(EventBus, CinemaHandlerFacade)
+Lay_D(EventBus, ExternalRatingServiceAdapter)
+Lay_D(ExternalRatingServiceAdapter, ExternalRatingServiceMessageOutbox)
+Lay_D(ExternalRatingServiceMessageOutbox, ExternalRatingService)
+Lay_D(ExternalRatingServiceMessageOutbox, OnlineCinemas)
+
+Lay_R(CinemaService, MovieService)
+Lay_R(MovieService, MovieViewService)
+Lay_R(MovieViewService, RatingService)
+Lay_R(RatingService, SearchService)
+Lay_R(SearchService, UserService)
+Lay_R(CinemaHandlerFacade, ExternalRatingServiceAdapter)
+Lay_R(OnlineCinemas, ExternalRatingService)
+Lay_R(MovieServiceDBRead, MovieServiceDBWrite)
+Lay_R(MovieServiceDBWrite, FileStorage)
+Lay_R(FileStorage, CinemaServiceDB)
+
+
+Rel(Admin, AdminWebUI, "Добавляет новые онлайн\nкинотеатры, загружает фильмы")
+Rel(User, WebUI, "Использует систему через браузер")
+Rel(User, MobileApp, "Использует систему через мобильное приложение")
+Rel(User, SmartTVApp, "Использует систему через смарт-тв")
+
+Rel(AdminWebUI, AdminBFF, "Отправляет запросы [HTTP Sync/Async]")
+Rel(WebUI, WebBFF, "Отправляет запросы [HTTP Sync/Async]")
+Rel(MobileApp, MobileAppBFF, "Отправляет запросы [HTTP Sync/Async]")
+Rel(SmartTVApp, SmartTVBFF, "Отправляет запросы [HTTP Sync/Async]")
+
+Rel(AdminBFF, CinemaService, "Подключение новых\nонлайн кинотеатров")
+Rel(AdminBFF, MovieService, "Загрузка фильмов")
+
+Rel(WebBFF, MovieService, " ")
+Rel(WebBFF, MovieViewService, " ")
+Rel(WebBFF, AuthService, " ")
+Rel(WebBFF, UserService, " ")
+Rel(WebBFF, BillingService, " ")
+Rel(WebBFF, RatingService, " ")
+Rel(WebBFF, SearchService, " ")
+Rel(WebBFF, CinemaService, " ")
+
+Rel(MobileAppBFF, MovieService, " ")
+Rel(MobileAppBFF, MovieViewService, " ")
+Rel(MobileAppBFF, AuthService, " ")
+Rel(MobileAppBFF, UserService, " ")
+Rel(MobileAppBFF, BillingService, " ")
+Rel(MobileAppBFF, RatingService, " ")
+Rel(MobileAppBFF, SearchService, " ")
+Rel(MobileAppBFF, CinemaService, " ")
+
+Rel(SmartTVBFF, MovieService, " ")
+Rel(SmartTVBFF, MovieViewService, " ")
+Rel(SmartTVBFF, AuthService, " ")
+Rel(SmartTVBFF, UserService, " ")
+Rel(SmartTVBFF, BillingService, " ")
+Rel(SmartTVBFF, RatingService, " ")
+Rel(SmartTVBFF, SearchService, " ")
+Rel(SmartTVBFF, CinemaService, " ")
+
+
+Rel(MovieService, MovieServiceDBRead, "Управляет\nданными", "SQL")
+Rel(MovieService, MovieServiceDBWrite, "Управляет\nданными", "SQL")
+Rel(MovieService, FileStorage, "Загрузка\nвидео файлов")
+Rel(MovieViewService, FileStorage, "Чтение\nвидео файлов")
+Rel(UserService, UserServiceDB, "Управляет\nданными", "SQL")
+Rel(AuthService, AuthServiceDB, "Управляет\nданными", "SQL")
+Rel(BillingService, BillingServiceDB, "Управляет\nданными", "SQL")
+Rel(RatingService, RatingServiceDB, "Управляет\nданными", "SQL")
+Rel(CinemaService, CinemaServiceDB, "Управляет\nданными", "SQL")
+Rel(SearchService, SearchServiceDB, "Отпраляет поисковые запросы", "JSON")
+
+Rel(MovieService, EventBus, "Публикует события о\nсохраненных фильмах\nих загрузке в S3, rollback-и")
+Rel(MovieService, EventBus, "Получает события\nо новых кинотеатрах,\nи новых фильмах ")
+Rel(CinemaService, EventBus, "Получает rollback событие от MovieService")
+Rel(CinemaService, EventBus, "Публикует события\nо новом онлайн кинотеатре")
+Rel(SearchService, EventBus, "Получает события\nо загруженных\nновых фильмах")
+Rel(RatingService, EventBus, "Получает событие\nо аггеригованных рейтингах")
+Rel(RatingService, EventBus, "Публикует события\nо новых рейтингах")
+Rel(CinemaHandlerFacade, EventBus, "Публикует данные о фильмах с других онлайн кинотеатров")
+
+
+
+Rel(CinemaHandlerFacade, OnlineCinemas, "Парсит данные с других онлайн кинотеатров по их API")
+Rel(ExternalRatingServiceAdapter, ExternalEventBus, "Публикует оценки пользователей")
+Rel(ExternalEventBus, ExternalRatingServiceAdapter, "Получает аггрегированные события по рейтингам")
+Rel(ExternalRatingServiceAdapter, EventBus, "Публикует аггрегированные события по рейтингам")
+Rel(BillingService, PaymentSystem, "Обрабатывает\nплатежи", "HTTP")
+Rel(CinemaHandlerFacade, CinemaService, "Получает список онлайн кинотеатров", "HTTP")
+Rel(ExternalRatingServiceAdapter, ExternalRatingServiceMessageOutbox, "Сохраняеет события в БД для дальнейшей отправки", "SQL")
+
+
+@enduml

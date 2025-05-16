@@ -1,0 +1,30 @@
+@startuml
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(User, "Пользователь", "Человек который имеет подписку на сервис кинобездны")
+
+System(Browser, "Веб приложение")
+System(MobileApp, "Мобильное приложение")
+System(SmartTV, "Приложение для смарт-тв")
+System(CinemaAbyss, "КиноБездна BackEnd")
+
+System_Ext(ThirdPartyCinemas, "Онлайн кинотеатры")
+System_Ext(BillingSystem, "Платежная система")
+System_Ext(ReviewSystem, "Рекомендательная система")
+
+Rel(User, Browser, "Смотрит кино через браузер")
+Rel(User, MobileApp, "Смотрит кино через мобильное приложение")
+Rel(User, SmartTV, "Смотрит кино через приложение для смарт-тв")
+
+Rel(Browser, CinemaAbyss, "Отправляет запросы [HTTP Sync, Async]")
+Rel(MobileApp, CinemaAbyss, "Отправляет запросы [HTTP Sync, Async]")
+Rel(SmartTV, CinemaAbyss, "Отправляет запросы [HTTP Sync, Async]")
+
+Rel(CinemaAbyss, ThirdPartyCinemas, "Скачивает контент")
+Rel(CinemaAbyss, BillingSystem, "Оплата подписки")
+Rel(CinemaAbyss, ReviewSystem, "Отправлет рейтинг")
+Rel(ReviewSystem, CinemaAbyss, "Получает итоговые рейтинги")
+
+@enduml

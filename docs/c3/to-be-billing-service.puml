@@ -1,0 +1,22 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(dev, "BillingService") {
+	Component(BillingController, "BillingController", "Обрабатывает запросы платежей и подписок")
+
+	Component(ServiceLayer, "ServiceLayer", "Business logic")
+
+	Component(RepositoryLayer, "RepositoryLayer", "Data access logic")
+	Component(PaymentAggregatorClient, "PaymentAggregatorClient", "Киент для работы с платежными системами")
+
+	Rel(BillingController, ServiceLayer, "Вызывает бизнес логику")
+
+	Rel(ServiceLayer, RepositoryLayer, "Чтение / запись данных")
+	Rel(ServiceLayer, PaymentAggregatorClient, "Отправка запросов")
+}
+
+ContainerDb(Db, "Billing DB", "PostgreSQL", "Хранит данные авторизации")
+System_Ext(PaymentServices, "PaymentServices", "Платежные сервисы")
+Rel(RepositoryLayer, Db, "Чтение / Запись данных о подписках и оплатах")
+Rel(PaymentAggregatorClient, PaymentServices, "Отправка запроса об оплате подписки [HTTP]")
+@enduml

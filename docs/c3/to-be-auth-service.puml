@@ -1,0 +1,22 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(dev, "AuthService") {
+	Component(AuthController, "AuthController", "Обрабатывает запросы на авторизацию")
+
+	Component(ServiceLayer, "ServiceLayer", "Business logic")
+
+	Component(RepositoryLayer, "RepositoryLayer", "Data access logic")
+	Component(HTTPClient, "HTTPClient", "HTTP клиент для взаимодествия c UserService")
+
+	Rel(AuthController, ServiceLayer, "Вызывает бизнес логику")
+
+	Rel(ServiceLayer, RepositoryLayer, "Чтение / запись данных")
+	Rel(ServiceLayer, HTTPClient, "Отправка запросов")
+}
+
+ContainerDb(Db, "Auth DB", "PostgreSQL", "Хранит данные авторизации")
+Container(UserService, "UserService", "Управляет данными о Пользователях")
+Rel(RepositoryLayer, Db, "Чтение / Запись данных о авторизации", "SQL")
+Rel(HTTPClient, UserService, "Получение данных о пользователе", "HTTP")
+@enduml
